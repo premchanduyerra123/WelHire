@@ -7,7 +7,6 @@
         <artifactId>business-services</artifactId>
         <version>1.0.0</version>
          <relativePath>../../../business-services/pom.xml</relativePath>
-
      </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -16,18 +15,10 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.38</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

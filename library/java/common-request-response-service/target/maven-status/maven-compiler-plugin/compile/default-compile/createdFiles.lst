@@ -1,1 +1,4 @@
-com\welhire\shared\dto\ApiResponse.class
+com\welhire\shared\dto\wrapper\ErrorResponse.class
+com\welhire\shared\dto\wrapper\ApiResponse.class
+com\welhire\shared\dto\wrapper\PaginationMeta.class
+com\welhire\shared\dto\wrapper\PageResponse.class

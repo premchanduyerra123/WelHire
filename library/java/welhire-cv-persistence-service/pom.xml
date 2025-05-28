@@ -8,7 +8,6 @@
         <artifactId>business-services</artifactId>
         <version>1.0.0</version>
         <relativePath>../../../business-services/pom.xml</relativePath>
-
     </parent>
 
     <groupId>com.welhire.persistence</groupId>
@@ -17,11 +16,6 @@
     <packaging>jar</packaging>
 
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -32,12 +26,10 @@
             <artifactId>common-request-response-service</artifactId>
             <version>1.0.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.2</version>
         </dependency>
-
     </dependencies>
+
 </project>

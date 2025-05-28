@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  welhire-cv-service:
+    build:
+      context: ../../business-services/welhire-cv-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - welhire-db
+
+  welhire-db:
+    image: postgres:16
+    container_name: welhire-db
+    environment:
+      POSTGRES_DB: welhire
+      POSTGRES_USER: welhire_user
+      POSTGRES_PASSWORD: welhire_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
