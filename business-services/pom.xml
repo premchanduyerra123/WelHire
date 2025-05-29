@@ -17,7 +17,9 @@
         <java.version>21</java.version>
         <spring.boot.version>3.5.0</spring.boot.version>
         <lombok.version>1.18.38</lombok.version>
+        <modelmapper.version>2.4.4</modelmapper.version>
         <postgresql.version>42.7.2</postgresql.version>
+        <springdoc.version>2.5.0</springdoc.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -40,10 +42,23 @@
             </dependency>
 
             <dependency>
+                <groupId>org.modelmapper</groupId>
+                <artifactId>modelmapper</artifactId>
+                <version>${modelmapper.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

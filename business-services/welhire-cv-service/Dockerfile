@@ -12,6 +12,7 @@ COPY . .
 # Build the application
 RUN mvn clean package -DskipTests
 
+
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre
 

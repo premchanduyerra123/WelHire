@@ -17,6 +17,8 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="common-request-response-service" options="" />
       <module name="welhire-cv-persistence-service" options="" />
+      <module name="welhire-cv-service" options="" />
+      <module name="welhire-platform" options="" />
     </option>
   </component>
 </project>
