@@ -1,4 +1,4 @@
-
+@0TTN.2Y&X:$6*JQF)NI[1$#AP?&K|RZK0)'X"NI9%NAXIY"_'5{R}]
 @echo off
 set "BASE_DIR=database"
 

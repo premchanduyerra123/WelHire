@@ -12,12 +12,16 @@
         <module name="common-request-response-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="welhire-discovery" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="common-request-response-service" options="" />
       <module name="welhire-cv-persistence-service" options="" />
       <module name="welhire-cv-service" options="" />
+      <module name="welhire-discovery" options="" />
       <module name="welhire-platform" options="" />
     </option>
   </component>

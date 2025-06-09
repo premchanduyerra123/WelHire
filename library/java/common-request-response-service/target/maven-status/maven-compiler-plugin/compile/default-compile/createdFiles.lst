@@ -1,4 +1,7 @@
 com\welhire\shared\dto\wrapper\ErrorResponse.class
-com\welhire\shared\dto\wrapper\ApiResponse.class
 com\welhire\shared\dto\wrapper\PaginationMeta.class
+com\welhire\shared\dto\v1\CandidateProfileDTO.class
 com\welhire\shared\dto\wrapper\PageResponse.class
+com\welhire\shared\dto\v1\CVUploadResponse.class
+com\welhire\shared\dto\wrapper\ApiResponse.class
+com\welhire\shared\dto\v1\MultiCVUploadRequest.class

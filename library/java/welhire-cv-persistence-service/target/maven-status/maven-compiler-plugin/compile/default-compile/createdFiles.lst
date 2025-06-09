@@ -1,2 +1,2 @@
-com\welhire\persistence\entity\CandidateProfile.class
-com\welhire\persistence\repository\CandidateProfileRepository.class
+com\welhire\persistence\entity\CandidateCVUpload.class
+com\welhire\persistence\repository\CandidateCVUploadRepository.class
