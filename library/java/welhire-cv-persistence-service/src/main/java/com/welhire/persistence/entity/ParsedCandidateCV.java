@@ -44,6 +44,9 @@ public class ParsedCandidateCV {
     private List<Integer> tokenCountUpdated;
     private Instant parsedAt = Instant.now();
 
+    private Boolean candidateCreated = false;
+    private String candidateId;
+
     @SuppressWarnings("unchecked")
     public static ParsedCandidateCV fromMap(Map<String,Object> m) {
         ParsedCandidateCV p = new ParsedCandidateCV();

@@ -3,6 +3,7 @@ package com.welhire.cv.services;
 import com.welhire.persistence.entity.CandidateCVUpload;
 import com.welhire.persistence.repository.CandidateCVUploadRepository;
 import com.welhire.persistence.repository.ParsedCandidateCVRepository;
+import com.welhire.shared.dto.enums.ParseStatus;
 import com.welhire.shared.dto.v1.CVUploadResponse;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
 import com.welhire.cv.client.ParsingClient;
@@ -72,7 +73,7 @@ public class CVUploadService {
                         cvParsedId,
                         originalName,
                         savedPath,
-                        upload.getIsParsed(),
+                        upload.getParseStatus(),
                         "Uploaded successfully"
                 );
             } catch (IOException e) {
@@ -80,7 +81,7 @@ public class CVUploadService {
                         null,
                         originalName,
                         null,
-                        false,
+                        ParseStatus.FAILURE,
                         "Failed to upload: " + e.getMessage()
                 );
             }
