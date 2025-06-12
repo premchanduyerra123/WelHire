@@ -3,26 +3,45 @@
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<parent>
-		<groupId>com.welhire</groupId>
-		<artifactId>business-services</artifactId>
-		<version>1.0.0</version>
-		<relativePath>../../business-services/pom.xml</relativePath>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+<!--		<version>3.5.0</version>-->
+		<version>3.2.5</version>
+		<relativePath/>
 	</parent>
-
 	<artifactId>welhire-cv-service</artifactId>
+ 	<groupId>com.welhire.cv</groupId>
+ 	<version>1.0.0</version>
 	<packaging>jar</packaging>
+	<properties>
+		<java.version>21</java.version>
+<!-- 		<spring.boot.version>3.2.5</spring.boot.version>-->
+		<spring.cloud.version>2023.0.1</spring.cloud.version>
+		<lombok.version>1.18.38</lombok.version>
+		<modelmapper.version>2.4.4</modelmapper.version>
+		<postgresql.version>42.7.2</postgresql.version>
+		<springdoc.version>2.5.0</springdoc.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring.cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 		</dependency>
 
 		<dependency>
@@ -31,29 +50,33 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-storage-blob</artifactId>
- 		</dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
+			<version>${lombok.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
+			<version>${modelmapper.version}</version>
  		</dependency>
 
 		<dependency>
 			<groupId>com.welhire.persistence</groupId>
 			<artifactId>welhire-cv-persistence-service</artifactId>
+			<version>1.0.0</version>
  		</dependency>
 
 		<dependency>
 			<groupId>com.welhire.shared</groupId>
 			<artifactId>common-request-response-service</artifactId>
+			<version>1.0.0</version>
  		</dependency>
 	</dependencies>
 

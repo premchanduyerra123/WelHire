@@ -4,26 +4,28 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.welhire</groupId>
-        <artifactId>business-services</artifactId>
-        <version>1.0.0</version>
-        <relativePath>../../../business-services/pom.xml</relativePath>
-     </parent>
-
     <groupId>com.welhire.shared</groupId>
     <artifactId>common-request-response-service</artifactId>
-     <packaging>jar</packaging>
-
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <properties>
+        <java.version>21</java.version>
+        <lombok.version>1.18.38</lombok.version>
+        <jakarta.validation.version>3.1.1</jakarta.validation.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
+            <version>${lombok.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+            <version>${jakarta.validation.version}</version>
         </dependency>
     </dependencies>
 

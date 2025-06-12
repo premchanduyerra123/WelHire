@@ -7,12 +7,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="welhire-cv-service" />
-        <module name="welhire-cv-persistence-service" />
-        <module name="common-request-response-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="common-request-response-service" target="1.8" />
+      <module name="welhire-cv-persistence-service" target="1.8" />
+      <module name="welhire-cv-service" target="1.8" />
       <module name="welhire-discovery" target="21" />
     </bytecodeTargetLevel>
   </component>

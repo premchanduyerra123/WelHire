@@ -1,4 +1,7 @@
 com\welhire\shared\dto\wrapper\ErrorResponse.class
+com\welhire\shared\dto\v1\CreateCandidateRequest.class
+com\welhire\shared\dto\v1\ParseRequest.class
+com\welhire\shared\dto\enums\ParseStatus.class
 com\welhire\shared\dto\wrapper\PaginationMeta.class
 com\welhire\shared\dto\v1\CandidateProfileDTO.class
 com\welhire\shared\dto\wrapper\PageResponse.class
