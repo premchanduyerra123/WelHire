@@ -5,7 +5,8 @@ D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\s
 D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\v1\CVUploadResponse.java
 D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\v1\MultiCVUploadRequest.java
 D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\v1\ParseRequest.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\ApiResponse.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\ErrorResponse.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\PageResponse.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\PaginationMeta.java
+D:\WORK\WELSPUN\WelHire2.0\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\v1\CandidateProfileDTO.java
+D:\WORK\WELSPUN\WelHire2.0\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\ApiResponse.java
+D:\WORK\WELSPUN\WelHire2.0\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\ErrorResponse.java
+D:\WORK\WELSPUN\WelHire2.0\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\PageResponse.java
+D:\WORK\WELSPUN\WelHire2.0\WelHire\library\java\common-request-response-service\src\main\java\com\welhire\shared\dto\wrapper\PaginationMeta.java

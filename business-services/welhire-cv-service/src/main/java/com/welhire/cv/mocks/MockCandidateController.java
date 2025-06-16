@@ -1,6 +1,6 @@
 package com.welhire.cv.mocks;
 
-import com.welhire.persistence.entity.ParsedCandidateCV;
+import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +16,8 @@ public class MockCandidateController {
     @PostMapping
     public ResponseEntity<CandidateCreationResponse> create(@RequestBody ParsedCandidateCV req) {
 
+        log.info("Received candidate creation request for uploadId={}", req.toString());
+
         log.info("Simulating delay of 10 seconds...");
         try {
             Thread.sleep(10_000);
@@ -24,7 +26,7 @@ public class MockCandidateController {
             log.warn("Sleep interrupted", e);
         }
 
-        String candId = "aksjdkjasbdkjjsbdkjjbsa_object" ;
+        String candId = "CAND-" + System.currentTimeMillis();
 
         CandidateCreationResponse resp = new CandidateCreationResponse(
                 candId,

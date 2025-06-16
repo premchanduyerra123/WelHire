@@ -1,7 +1,7 @@
 package com.welhire.cv.controllers;
 
  import com.welhire.cv.services.CVParsingService;
- import com.welhire.persistence.entity.ParsedCandidateCV;
+ import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
 import com.welhire.shared.dto.wrapper.ApiResponse;
 
 import lombok.RequiredArgsConstructor;

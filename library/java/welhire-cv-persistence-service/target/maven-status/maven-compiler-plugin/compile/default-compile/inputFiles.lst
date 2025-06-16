@@ -1,4 +1,2 @@
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\welhire-cv-persistence-service\src\main\java\com\welhire\persistence\entity\CandidateCVUpload.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\welhire-cv-persistence-service\src\main\java\com\welhire\persistence\entity\ParsedCandidateCV.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\welhire-cv-persistence-service\src\main\java\com\welhire\persistence\repository\CandidateCVUploadRepository.java
-D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\welhire-cv-persistence-service\src\main\java\com\welhire\persistence\repository\ParsedCandidateCVRepository.java
+D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\welhire-cv-persistence-service\src\main\java\com\welhire\persistence\entity\CandidateProfile.java
+D:\WELSPUN\WELPRO\WELHIRE\WelHire\library\java\welhire-cv-persistence-service\src\main\java\com\welhire\persistence\repository\CandidateProfileRepository.java

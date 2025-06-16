@@ -1,15 +1,14 @@
 package com.welhire.cv.services;
 
 import com.welhire.cv.client.CandidateClient;
-import com.welhire.persistence.entity.CandidateCVUpload;
-import com.welhire.persistence.entity.ParsedCandidateCV;
-import com.welhire.persistence.repository.CandidateCVUploadRepository;
-import com.welhire.persistence.repository.ParsedCandidateCVRepository;
+import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
+import com.welhire.persistence.entity.sql.CandidateCvUpload;
+import com.welhire.persistence.repository.mongo.ParsedCandidateCvRepository;
+import com.welhire.persistence.repository.sql.CandidateCVUploadRepository;
 import com.welhire.cv.client.ParsingClient;
 
 import com.welhire.shared.dto.enums.ParseStatus;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
-import com.welhire.shared.dto.v1.CreateCandidateRequest;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
 import com.welhire.shared.dto.v1.ParseRequest;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class CVParsingService {
 
-    private final ParsedCandidateCVRepository parsedRepo;
+    private final ParsedCandidateCvRepository parsedRepo;
     private final CandidateCVUploadRepository uploadRepo;
     private final ParsingClient parsingClient;
     private final MongoTemplate mongoTemplate;
@@ -42,7 +41,7 @@ public class CVParsingService {
 
 
     @Async("taskExecutor")
-    public void parseAndCreateAsync(CandidateCVUpload upload,
+    public void parseAndCreateAsync(CandidateCvUpload upload,
                                     MultiCVUploadRequest meta,
                                     boolean isParsed) {
         log.info("[{}] parseAndCreateAsync start; isParsed={}", upload.getId(), isParsed);
@@ -55,14 +54,13 @@ public class CVParsingService {
 
             ParsedCandidateCV pcv;
             try {
-                Map<String, Object> parsedJson = parsingClient.parseCV(
+                  pcv = parsingClient.parseCV(
                         new ParseRequest(upload.getId(), upload.getFilePath())
                 );
-                pcv = ParsedCandidateCV.fromMap(parsedJson)
-                        .toBuilder()
-                        .jdContentId(upload.getJdRefId())
-                        .cvUploadId(upload.getId())
-                        .build();
+
+                pcv.setCvUploadRefId(upload.getId());
+                pcv.setCreatedBy(meta.getEmail());
+                pcv.setCreatedAt(LocalDateTime.now());
                 parsedRepo.save(pcv);
 
                 upload.setParseStatus(ParseStatus.CV_PARSED_SUCCESS);
@@ -85,7 +83,7 @@ public class CVParsingService {
         uploadRepo.save(upload);
 
         try {
-            ParsedCandidateCV pcv = parsedRepo.findByCvUploadId(upload.getId())
+            ParsedCandidateCV pcv = parsedRepo.findByCvUploadRefId(upload.getId())
                     .orElseThrow(() -> new RuntimeException("Parsed data missing for uploadId=" + upload.getId()));
 
             CandidateCreationResponse creationResp = creationService.createCandidate(pcv);

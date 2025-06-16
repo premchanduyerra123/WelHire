@@ -1,27 +1,31 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  welhire-cv-service:
-    build:
-      context: ../../business-services/welhire-cv-service
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
-    depends_on:
-      - welhire-db
-
-  welhire-db:
-    image: postgres:16
+  postgres:
+    image: postgres:15
     container_name: welhire-db
-    environment:
-      POSTGRES_DB: welhire
-      POSTGRES_USER: welhire_user
-      POSTGRES_PASSWORD: welhire_pass
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: welhire
+      POSTGRES_USER: welhireuser
+      POSTGRES_PASSWORD: welhirepass
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  welhire-cv-service:
+    container_name: welhire-cv-service
+    build:
+      context: ../../business-services  # This lands us in: WelHire2.0/WelHire/
+      dockerfile: welhire-cv-service/Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/welhire
+      SPRING_DATASOURCE_USERNAME: welhireuser
+      SPRING_DATASOURCE_PASSWORD: welhirepass
 
 volumes:
   pgdata:
