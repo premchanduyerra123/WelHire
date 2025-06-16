@@ -22,6 +22,7 @@
 		<modelmapper.version>2.4.4</modelmapper.version>
 		<postgresql.version>42.7.2</postgresql.version>
 		<springdoc.version>2.5.0</springdoc.version>
+		<jakarta.validation.version>3.1.1</jakarta.validation.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -67,17 +68,35 @@
 			<version>${modelmapper.version}</version>
  		</dependency>
 
-		<dependency>
-			<groupId>com.welhire.persistence</groupId>
-			<artifactId>welhire-cv-persistence-service</artifactId>
-			<version>1.0.0</version>
- 		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.welhire.persistence</groupId>-->
+<!--			<artifactId>welhire-cv-persistence-service</artifactId>-->
+<!--			<version>1.0.0</version>-->
+<!-- 		</dependency>-->
+
+<!--		<dependency>-->
+<!--			<groupId>com.welhire.shared</groupId>-->
+<!--			<artifactId>common-request-response-service</artifactId>-->
+<!--			<version>1.0.0</version>-->
+<!-- 		</dependency>-->
+
 
 		<dependency>
-			<groupId>com.welhire.shared</groupId>
-			<artifactId>common-request-response-service</artifactId>
-			<version>1.0.0</version>
- 		</dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>${jakarta.validation.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>

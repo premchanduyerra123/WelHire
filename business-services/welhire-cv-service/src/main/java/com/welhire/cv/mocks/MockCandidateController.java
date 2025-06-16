@@ -1,32 +1,37 @@
 package com.welhire.cv.mocks;
 
+import com.welhire.persistence.entity.ParsedCandidateCV;
+import com.welhire.shared.dto.v1.CandidateCreationResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
-import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/candidates")
 public class MockCandidateController {
 
-    public static class CreateCandidateRequest {
-        public String jdContentId;
-        public String cvParsedId;
-        public String cvUploadId;
-        public String jdCvParsedId;
-    }
+
 
     @PostMapping
-    public Map<String,Object> createCandidate(@RequestBody CreateCandidateRequest req) {
-        // simulate some ID creation
-        String newCandidateId = UUID.randomUUID().toString();
-        return Map.of(
-                "status",        "success",
-                "candidateId",   newCandidateId,
-                "jdContentId",   req.jdContentId,
-                "cvParsedId",    req.cvParsedId,
-                "cvUploadId",    req.cvUploadId,
-                "jdCvParsedId",  req.jdCvParsedId
+    public ResponseEntity<CandidateCreationResponse> create(@RequestBody ParsedCandidateCV req) {
+
+        log.info("Simulating delay of 10 seconds...");
+        try {
+            Thread.sleep(10_000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Sleep interrupted", e);
+        }
+
+        String candId = "aksjdkjasbdkjjsbdkjjbsa_object" ;
+
+        CandidateCreationResponse resp = new CandidateCreationResponse(
+                candId,
+                "SUCCESS",
+                "Candidate created successfully for uploadId=" + req.getId()
         );
+        return ResponseEntity.ok(resp);
     }
 }
 

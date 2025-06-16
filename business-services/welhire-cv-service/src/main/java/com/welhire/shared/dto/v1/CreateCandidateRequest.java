@@ -1,5 +1,9 @@
 package com.welhire.shared.dto.v1;
 
+
+import lombok.Data;
+
+@Data
 public class CreateCandidateRequest {
     public String jdContentId;
     public String cvParsedId;

@@ -6,5 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface ParsedCandidateCVRepository  extends MongoRepository<ParsedCandidateCV, String> {
-    Optional<ParsedCandidateCV> findByJdContentId(String jdContentId);
+
+    Optional<ParsedCandidateCV> findByCvUploadId(String id);
 }

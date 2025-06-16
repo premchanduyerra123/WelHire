@@ -4,6 +4,7 @@ import com.welhire.persistence.entity.CandidateCVUpload;
 import com.welhire.persistence.repository.CandidateCVUploadRepository;
 import com.welhire.persistence.repository.ParsedCandidateCVRepository;
 import com.welhire.shared.dto.enums.ParseStatus;
+import com.welhire.shared.dto.utils.FileHashUtil;
 import com.welhire.shared.dto.v1.CVUploadResponse;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
 import com.welhire.cv.client.ParsingClient;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,55 +43,75 @@ public class CVUploadService {
     private final CVParsingService parsingService;
     private final MongoTemplate mongoTemplate;
 
-    public List<CVUploadResponse> uploadFiles(MultiCVUploadRequest meta, List<MultipartFile> files) {
-        List<CVUploadResponse> responses = new ArrayList<>();
+    private final CandidateCVUploadRepository uploadRepo;
+    private final DuplicateChecker duplicateChecker;
+    private final CandidateCreationService creationService;
 
-        String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+    public List<CVUploadResponse> uploadFiles(MultiCVUploadRequest meta,
+                                              List<MultipartFile> files) {
+        List<CVUploadResponse> responses = new ArrayList<>();
+        String ts = DateTimeFormatter
+                .ofPattern("yyyyMMdd'T'HHmmss'Z'")
                 .withZone(java.time.ZoneOffset.UTC)
                 .format(Instant.now());
 
         for (MultipartFile file : files) {
-            String originalName = file.getOriginalFilename();
+            String name = file.getOriginalFilename();
             CVUploadResponse resp;
             try {
-                // 1) Save file to disk
-                String savedPath = storageService.storeFile(file, meta.getJdContentId(), meta.getEmail(), timestamp);
+                String hash = FileHashUtil.calculateMD5(file);
+                var dupOpt = duplicateChecker.findDuplicate(hash);
 
-                // 2) Persist upload record and grab the generated ID
-                CandidateCVUpload upload = new CandidateCVUpload();
-                upload.setJdContentId(meta.getJdContentId());
-                upload.setUserEmail(meta.getEmail());
-                upload.setCvName(originalName);
-                upload.setFilePath(savedPath);
-                // parse flags default to false, times null
-                upload = repository.save(upload);
-                String cvParsedId = upload.getId();
+                if (dupOpt.isPresent()) {
+                    CandidateCVUpload existing = dupOpt.get();
 
-                // 3) fire off parsing (async)
-                parsingService.parseAsync(upload);
+                    // kick off only candidate‐creation (parsing already done)
+                    parsingService.parseAndCreateAsync(existing, meta, true);
 
-                // 4) return the jdContentId so client can track status
-                resp = new CVUploadResponse(
-                        cvParsedId,
-                        originalName,
-                        savedPath,
-                        upload.getParseStatus(),
-                        "Uploaded successfully"
-                );
-            } catch (IOException e) {
-                resp = new CVUploadResponse(
-                        null,
-                        originalName,
-                        null,
-                        ParseStatus.FAILURE,
-                        "Failed to upload: " + e.getMessage()
-                );
+                    resp = new CVUploadResponse(
+                            existing.getId(),
+                            name,
+                            existing.getFilePath(),
+                            ParseStatus.CV_PARSED_SUCCESS,
+                            "Duplicate: scheduled candidate‐creation async"
+                    );
+
+                } else {
+                    String saved = storageService.storeFile(
+                            file, meta.getJdRefId(), meta.getEmail(), ts);
+                    CandidateCVUpload upload = CandidateCVUpload.builder()
+                            .userEmail(meta.getEmail())
+                            .jdRefId(meta.getJdRefId())
+                            .cvName(name)
+                            .filePath(saved)
+                            .fileHash(hash)
+                            .parseStatus(ParseStatus.CV_UPLOADED)
+                            .build();
+
+                    upload.setCreatedAt(LocalDateTime.now());
+                    upload.setCreatedBy(meta.getEmail());
+
+
+
+                    upload = uploadRepo.save(upload);
+
+                    parsingService.parseAndCreateAsync(upload, meta,false);
+
+                    resp = new CVUploadResponse(upload.getId(), name,
+                            saved, ParseStatus.CV_UPLOADED,
+                            "Uploaded and queued");
+                }
+            } catch (IOException ex) {
+                resp = new CVUploadResponse(null, name, null,
+                        ParseStatus.CV_PARSED_FAILURE,
+                        "Upload error: " + ex.getMessage());
             }
             responses.add(resp);
         }
 
         return responses;
     }
+
 
 
     public Optional<CandidateCVUpload> getById(String id) {

@@ -9,7 +9,7 @@ import lombok.Data;
 public class MultiCVUploadRequest {
 
     @NotBlank(message = "JD Content is required")
-    private String jdContentId;
+    private String jdRefId;
 
     @Email(message = "Must be a valid email")
     @NotBlank(message = "Email is required")

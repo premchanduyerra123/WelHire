@@ -8,7 +8,9 @@ import com.welhire.persistence.repository.ParsedCandidateCVRepository;
 import com.welhire.cv.client.ParsingClient;
 
 import com.welhire.shared.dto.enums.ParseStatus;
+import com.welhire.shared.dto.v1.CandidateCreationResponse;
 import com.welhire.shared.dto.v1.CreateCandidateRequest;
+import com.welhire.shared.dto.v1.MultiCVUploadRequest;
 import com.welhire.shared.dto.v1.ParseRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,50 +38,83 @@ public class CVParsingService {
     private final ParsingClient parsingClient;
     private final MongoTemplate mongoTemplate;
     private final CandidateClient candidateClient;   // ← inject
+    private final CandidateCreationService creationService;
+
+
     @Async("taskExecutor")
-    public void parseAsync(CandidateCVUpload upload) {
-        log.info("parseAsync on {} for uploadId={}", Thread.currentThread().getName(), upload.getId());
+    public void parseAndCreateAsync(CandidateCVUpload upload,
+                                    MultiCVUploadRequest meta,
+                                    boolean isParsed) {
+        log.info("[{}] parseAndCreateAsync start; isParsed={}", upload.getId(), isParsed);
 
-        upload.setParseStartTime(LocalDateTime.now());
-        upload.setParseStatus(ParseStatus.PROCESSING);
-        uploadRepo.save(upload);
+        // 1) PARSING PHASE (only if not already parsed)
+        if (!isParsed) {
+            upload.setParseStatus(ParseStatus.CV_PROCESSING);
+            upload.setUpdatedAt(LocalDateTime.now());
+            uploadRepo.save(upload);
 
-        // 1) parse if needed
-        //need to change the logic of file hashing
-        ParsedCandidateCV pcv = parsedRepo.findByJdContentId(upload.getId())
-                .orElseGet(() -> {
-                    Map<String,Object> parsedJson = parsingClient.parseCV(
-                            new ParseRequest(upload.getJdContentId(), upload.getFilePath()));
+            ParsedCandidateCV pcv;
+            try {
+                Map<String, Object> parsedJson = parsingClient.parseCV(
+                        new ParseRequest(upload.getId(), upload.getFilePath())
+                );
+                pcv = ParsedCandidateCV.fromMap(parsedJson)
+                        .toBuilder()
+                        .jdContentId(upload.getJdRefId())
+                        .cvUploadId(upload.getId())
+                        .build();
+                parsedRepo.save(pcv);
 
-                    ParsedCandidateCV newly = ParsedCandidateCV.fromMap(parsedJson);
-                    newly.setJdContentId(upload.getJdContentId());
-                    newly.setCvUploadId(upload.getId());
-                    return parsedRepo.save(newly);
-                });
-
-        // 2) now call candidate‐service if not yet done
-        if (!Boolean.TRUE.equals(pcv.getCandidateCreated())) {
-            log.info("Calling candidate‐service for parsedId={}", pcv.getId());
-            var req = new CreateCandidateRequest(
-                    pcv.getJdContentId(),
-                    pcv.getId(),
-                    pcv.getCvUploadId(),
-                    "FIXED_JD_CV_PARSED_ID"
-            );
-            Map<String,Object> resp = candidateClient.createCandidate(req);
-            log.info("Candidate‐service response: {}", resp);
-
-            // update the flag + optional returned candidateId
-            pcv.setCandidateCreated(true);
-            if (resp.containsKey("candidateId")) {
-                pcv.setCandidateId((String) resp.get("candidateId"));
+                upload.setParseStatus(ParseStatus.CV_PARSED_SUCCESS);
+                upload.setParseEndTime(LocalDateTime.now());
+            } catch (Exception ex) {
+                log.error("[{}] parsing failed", upload.getId(), ex);
+                upload.setParseStatus(ParseStatus.CV_PARSED_FAILURE);
+                upload.setUpdatedAt(LocalDateTime.now());
+                uploadRepo.save(upload);
+                return;
             }
-            parsedRepo.save(pcv);
+
+            upload.setUpdatedAt(LocalDateTime.now());
+            uploadRepo.save(upload);
         }
 
-        upload.setParseStatus(ParseStatus.SUCCESS);
-        upload.setParseEndTime(LocalDateTime.now());
+        // 2) CANDIDATE CREATION PHASE
+        upload.setParseStatus(ParseStatus.CANDIDATE_CREATION_PROCESSING);
+        upload.setUpdatedAt(LocalDateTime.now());
         uploadRepo.save(upload);
+
+        try {
+            ParsedCandidateCV pcv = parsedRepo.findByCvUploadId(upload.getId())
+                    .orElseThrow(() -> new RuntimeException("Parsed data missing for uploadId=" + upload.getId()));
+
+            CandidateCreationResponse creationResp = creationService.createCandidate(pcv);
+            upload.setCandidateId(creationResp.getCandidateId());
+            upload.setParseStatus(ParseStatus.CANDIDATE_CREATION_SUCCESS);
+        } catch (Exception ex) {
+            log.error("[{}] candidate creation failed", upload.getId(), ex);
+            upload.setParseStatus(ParseStatus.CANDIDATE_CREATION_FAILURE);
+        }
+
+        upload.setUpdatedAt(LocalDateTime.now());
+        uploadRepo.save(upload);
+
+        // 3) OPTIONAL JD-MATCHING PHASE
+        // upload.setParseStatus(ParseStatus.CV_JD_MATCHING_PROCESSING);
+        // upload.setUpdatedAt(LocalDateTime.now());
+        // uploadRepo.save(upload);
+        //
+        // try {
+        //     matchingService.match(upload.getId());
+        //     upload.setParseStatus(ParseStatus.CV_JD_MATCHING_SUCCESS);
+        // } catch (Exception ex) {
+        //     log.error("[{}] JD matching failed", upload.getId(), ex);
+        //     upload.setParseStatus(ParseStatus.CV_JD_MATCHING_FAILURE);
+        // }
+        // upload.setUpdatedAt(LocalDateTime.now());
+        // uploadRepo.save(upload);
+
+        log.info("[{}] parseAndCreateAsync complete; final status={}", upload.getId(), upload.getParseStatus());
     }
 
     public ParsedCandidateCV getById(String id) {

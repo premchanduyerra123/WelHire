@@ -8,3 +8,4 @@ com\welhire\shared\dto\wrapper\PageResponse.class
 com\welhire\shared\dto\v1\CVUploadResponse.class
 com\welhire\shared\dto\wrapper\ApiResponse.class
 com\welhire\shared\dto\v1\MultiCVUploadRequest.class
+com\welhire\shared\dto\audits\BaseAudit.class

@@ -1,7 +1,10 @@
 package com.welhire.persistence.entity;
 
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -10,6 +13,9 @@ import java.util.Map;
 
 @Document(collection = "parsed_candidate_cv")
 @Data
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class ParsedCandidateCV {
     @Id
     private String id;
@@ -92,5 +98,8 @@ public class ParsedCandidateCV {
         p.setTokenCountUpdated((List<Integer>) m.get("tokenCountUpdated"));
         p.setParsedAt(Instant.now());
         return p;
-    }}
+    }
+
+
+}
 
