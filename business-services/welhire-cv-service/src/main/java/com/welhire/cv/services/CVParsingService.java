@@ -6,7 +6,6 @@ import com.welhire.persistence.entity.sql.CandidateCvUpload;
 import com.welhire.persistence.repository.mongo.ParsedCandidateCvRepository;
 import com.welhire.persistence.repository.sql.CandidateCVUploadRepository;
 import com.welhire.cv.client.ParsingClient;
-
 import com.welhire.shared.dto.enums.ParseStatus;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
@@ -24,10 +23,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -45,67 +40,38 @@ public class CVParsingService {
     private final FileSystemStorageService storageService;
     private final CandidateCreationService creationService;
 
-
     @Async("taskExecutor")
     public void parseAndCreateAsync(CandidateCvUpload upload,
                                     MultiCVUploadRequest meta,
                                     boolean isParsed) {
-        log.info("[{}] parseAndCreateAsync start; isParsed={}", upload.getId(), isParsed);
+        log.info("[{}] pipeline start (alreadyParsed={})", upload.getId(), isParsed);
 
-        // 1) PARSING PHASE (only if not already parsed)
-
+        // 1) PARSING
         if (!isParsed) {
-            // 1) load the saved file as a Resource
-
-             Resource fileResource = storageService.loadAsResource(upload.getFilePath());
-
-            if (!fileResource.exists() || !fileResource.isReadable()) {
-                log.error("[{}] file not found or not readable: {}", upload.getId(), upload.getFilePath());
-                upload.setParseStatus(ParseStatus.CV_PARSED_FAILURE);
-                upload.setParseErrorMessage("File not found or unreadable");
-                upload.setUpdatedAt(LocalDateTime.now());
-                uploadRepo.save(upload);
+            Resource res = storageService.loadAsResource(upload.getFilePath());
+            if (!res.exists() || !res.isReadable()) {
+                fail(upload, ParseStatus.CV_PARSED_FAILURE, "File missing or unreadable");
                 return;
             }
 
-            // 2) mark processing
             upload.setParseStatus(ParseStatus.CV_PROCESSING);
             upload.setUpdatedAt(LocalDateTime.now());
             uploadRepo.save(upload);
 
-
             try {
-                // --- NEW: wrap the Resource into a MultipartFile ---
-                File diskFile = fileResource.getFile();
-                String contentType = Files.probeContentType(diskFile.toPath());
-                if (contentType == null) {
-                    contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-                }
-                MultipartFile multipart = null;
-                try (InputStream is = new FileInputStream(diskFile)) {
-                      multipart = new ResourceMultipartFile(
-                            "file",
-                            fileResource,
-                            contentType
-                    );
-                }
-
-                ParsedCandidateCV pcv = parsingClient.parseCV(multipart);
-                // ----------------------------------------------------
-
+                MultipartFile mf = new ResourceMultipartFile(
+                        "file", res, MediaType.APPLICATION_OCTET_STREAM_VALUE
+                );
+                ParsedCandidateCV pcv = parsingClient.parseCV(mf);
                 pcv.setCvUploadRefId(upload.getId());
                 pcv.setCreatedBy(meta.getEmail());
                 pcv.setCreatedAt(LocalDateTime.now());
                 parsedRepo.save(pcv);
 
                 upload.setParseStatus(ParseStatus.CV_PARSED_SUCCESS);
-                upload.setParseEndTime(LocalDateTime.now());
-
-            } catch (Exception ex) {
-                log.error("[{}] parsing failed", upload.getId(), ex);
-                upload.setParseStatus(ParseStatus.CV_PARSED_FAILURE);
-                upload.setUpdatedAt(LocalDateTime.now());
-                uploadRepo.save(upload);
+            } catch (Exception e) {
+                log.error("[{}] parsing error", upload.getId(), e);
+                fail(upload, ParseStatus.CV_PARSED_FAILURE, e.getMessage());
                 return;
             }
 
@@ -113,42 +79,36 @@ public class CVParsingService {
             uploadRepo.save(upload);
         }
 
-        // 2) CANDIDATE CREATION PHASE
+        // 2) CANDIDATE CREATION
         upload.setParseStatus(ParseStatus.CANDIDATE_CREATION_PROCESSING);
         upload.setUpdatedAt(LocalDateTime.now());
         uploadRepo.save(upload);
 
         try {
-            ParsedCandidateCV pcv = parsedRepo.findByCvUploadRefId(upload.getId())
-                    .orElseThrow(() -> new RuntimeException("Parsed data missing for uploadId=" + upload.getId()));
+            ParsedCandidateCV pcv = parsedRepo
+                    .findByCvUploadRefId(upload.getId())
+                    .orElseThrow(() -> new IllegalStateException("No parsed CV for " + upload.getId()));
 
-            CandidateCreationResponse creationResp = creationService.createCandidate(pcv);
-            upload.setCandidateId(creationResp.getCandidateId());
+            CandidateCreationResponse resp = creationService.createCandidate(pcv);
+            upload.setCandidateId(resp.getCandidateId());
             upload.setParseStatus(ParseStatus.CANDIDATE_CREATION_SUCCESS);
-        } catch (Exception ex) {
-            log.error("[{}] candidate creation failed", upload.getId(), ex);
+        } catch (Exception e) {
+            log.error("[{}] creation error", upload.getId(), e);
             upload.setParseStatus(ParseStatus.CANDIDATE_CREATION_FAILURE);
         }
 
         upload.setUpdatedAt(LocalDateTime.now());
         uploadRepo.save(upload);
 
-        // 3) OPTIONAL JD-MATCHING PHASE
-        // upload.setParseStatus(ParseStatus.CV_JD_MATCHING_PROCESSING);
-        // upload.setUpdatedAt(LocalDateTime.now());
-        // uploadRepo.save(upload);
-        //
-        // try {
-        //     matchingService.match(upload.getId());
-        //     upload.setParseStatus(ParseStatus.CV_JD_MATCHING_SUCCESS);
-        // } catch (Exception ex) {
-        //     log.error("[{}] JD matching failed", upload.getId(), ex);
-        //     upload.setParseStatus(ParseStatus.CV_JD_MATCHING_FAILURE);
-        // }
-        // upload.setUpdatedAt(LocalDateTime.now());
-        // uploadRepo.save(upload);
+        log.info("[{}] pipeline complete (status={})",
+                upload.getId(), upload.getParseStatus());
+    }
 
-        log.info("[{}] parseAndCreateAsync complete; final status={}", upload.getId(), upload.getParseStatus());
+    private void fail(CandidateCvUpload upload, ParseStatus status, String msg) {
+        upload.setParseStatus(status);
+        upload.setParseErrorMessage(msg);
+        upload.setUpdatedAt(LocalDateTime.now());
+        uploadRepo.save(upload);
     }
 
     public ParsedCandidateCV getById(String id) {
@@ -156,24 +116,14 @@ public class CVParsingService {
                 .orElseThrow(() -> new RuntimeException("Parsed CV not found: " + id));
     }
 
-    public Page<ParsedCandidateCV> searchBy(
-            Map<String,String> filters,
-            Pageable pageable
-    ) {
-        Query query = new Query();
-
-        filters.forEach((field, value) -> {
-            String regex = ".*" + Pattern.quote(value.trim()) + ".*";
-            query.addCriteria(Criteria.where(field).regex(regex, "i"));
-        });
-
-        long total = mongoTemplate.count(query, ParsedCandidateCV.class);
-        query.with(pageable);
-
-        List<ParsedCandidateCV> list =
-                mongoTemplate.find(query, ParsedCandidateCV.class);
-
-        return new PageImpl<>(list, pageable, total);
+    public Page<ParsedCandidateCV> searchBy(Map<String, String> filters,
+                                            Pageable pageable) {
+        Query q = new Query();
+        filters.forEach((f, v) ->
+                q.addCriteria(Criteria.where(f).regex(".*" + Pattern.quote(v.trim()) + ".*", "i"))
+        );
+        long total = mongoTemplate.count(q, ParsedCandidateCV.class);
+        List<ParsedCandidateCV> results = mongoTemplate.find(q.with(pageable), ParsedCandidateCV.class);
+        return new PageImpl<>(results, pageable, total);
     }
 }
-
