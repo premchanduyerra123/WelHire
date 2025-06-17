@@ -1,6 +1,6 @@
 package com.welhire.cv.mocks;
 
-import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
+import com.welhire.persistence.entity.mongo.CvParsed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -19,20 +19,19 @@ public class MockParsingController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ParsedCandidateCV parseCV(@RequestPart("file") MultipartFile file) throws InterruptedException {
+    public CvParsed parseCV(@RequestPart("file") MultipartFile file) throws InterruptedException {
         String fileName = file.getOriginalFilename();
         log.info("Received parse multipart → file={}", fileName);
 
         // simulate delay
         Thread.sleep(10_000);
-        log.info("Delay complete; returning mock ParsedCandidateCV for file={}", fileName);
+        log.info("Delay complete; returning mock CvParsed for file={}", fileName);
 
-        return ParsedCandidateCV.builder()
+        return CvParsed.builder()
 
 
                 // CORE PARSED DATA
-                .cvUploadRefId(fileName)
-                .name("MITI BHARDWAJ")
+                 .name("MITI BHARDWAJ")
                 .mobileNo("9033887718")
                 .emailId("miti07.bhardwaj@gmail.com")
                 .dateOfBirth("19/05/1999")

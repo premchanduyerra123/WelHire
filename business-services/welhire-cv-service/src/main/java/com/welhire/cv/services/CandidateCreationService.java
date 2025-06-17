@@ -2,7 +2,7 @@ package com.welhire.cv.services;
 
 import com.welhire.cv.client.CandidateClient;
 import com.welhire.exceptions.CandidateCreationException;
-import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
+import com.welhire.persistence.entity.mongo.CvParsed;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
 import com.welhire.shared.dto.v1.CreateCandidateRequest;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class CandidateCreationService {
     private final CandidateClient client;
 
-    public CandidateCreationResponse createCandidate(ParsedCandidateCV pcv) {
+    public CandidateCreationResponse createCandidate(CvParsed pcv) {
         try {
             return client.createCandidate(pcv);
         } catch (Exception ex) {

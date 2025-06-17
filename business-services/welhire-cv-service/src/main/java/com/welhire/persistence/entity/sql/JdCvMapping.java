@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "jd_cv_mapping")
@@ -25,8 +26,8 @@ public class JdCvMapping extends BaseAudit {
             name = "UUID",
             strategy = "org.hibernate.id.UUIDGenerator"
     )
-    private String id;
+    private UUID id;
     private String jdRefId;
-    private String cvUploadRefId;
+    private UUID cvUploadRefId;
 
 }

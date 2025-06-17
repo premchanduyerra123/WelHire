@@ -12,16 +12,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-@Document(collection = "parsed_candidate_cv")
+@Document(collection = "cv_parsed")
 @Data
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ParsedCandidateCV extends BaseAudit {
+public class CvParsed extends BaseAudit {
     @Id
     private String id;
-    private String cvUploadRefId;
+    private UUID cvUploadRefId;
     private String name;
     private String mobileNo;
     private String emailId;

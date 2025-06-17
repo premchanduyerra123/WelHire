@@ -3,7 +3,7 @@ package com.welhire.cv.client;
 
 import java.util.Map;
 
-import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
+import com.welhire.persistence.entity.mongo.CvParsed;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
 import com.welhire.shared.dto.v1.CreateCandidateRequest;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  public interface CandidateClient {
 
     @PostMapping("/candidates")
-    CandidateCreationResponse createCandidate(@RequestBody ParsedCandidateCV req);
+    CandidateCreationResponse createCandidate(@RequestBody CvParsed req);
 
 }
 

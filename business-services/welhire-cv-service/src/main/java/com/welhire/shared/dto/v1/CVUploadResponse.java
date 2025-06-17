@@ -7,10 +7,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @RequiredArgsConstructor
 public class CVUploadResponse {
-    private String cvUploadId;
+    private UUID cvUploadId;
     private String fileName;
     private String savedPath;
     private boolean success;
@@ -18,7 +20,7 @@ public class CVUploadResponse {
     private ParseStatus isParsed;
 
 
-    public CVUploadResponse(String cvUploadId, String fileName, String savedPath, ParseStatus isParsed, String message) {
+    public CVUploadResponse(UUID cvUploadId, String fileName, String savedPath, ParseStatus isParsed, String message) {
         this.cvUploadId=cvUploadId;
         this.fileName=fileName;
         this.savedPath=savedPath;

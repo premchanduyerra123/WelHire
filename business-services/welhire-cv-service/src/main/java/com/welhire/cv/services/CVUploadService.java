@@ -1,149 +1,139 @@
 package com.welhire.cv.services;
 
-import com.welhire.persistence.entity.sql.CandidateCvUpload;
+import com.welhire.persistence.entity.sql.CvUpload;
 import com.welhire.persistence.entity.sql.JdCvMapping;
-import com.welhire.persistence.repository.sql.CandidateCVUploadRepository;
+import com.welhire.persistence.repository.sql.CvUploadRepository;
 import com.welhire.persistence.repository.sql.JdCvMappingRepository;
 import com.welhire.shared.dto.enums.ParseStatus;
 import com.welhire.shared.dto.utils.FileHashUtil;
 import com.welhire.shared.dto.v1.CVUploadResponse;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Pattern;
-
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class CVUploadService {
 
-    private final CandidateCVUploadRepository uploadRepo;
-    private final FileSystemStorageService storageService;
-    private final CVParsingService parsingService;
-    private final MongoTemplate mongoTemplate;
+    private final CvUploadRepository uploadRepo;
     private final JdCvMappingRepository mappingRepo;
-    private final HashDuplicateChecker duplicateChecker;
+    private final FileSystemStorageService storage;
+    private final CVParsingService parsing;
+    private final MongoTemplate mongo;
+    private final HashDuplicateChecker dupChecker;
+
+    /* ------------------------------------------------- */
+    /*  PUBLIC API                                       */
+    /* ------------------------------------------------- */
 
     public List<CVUploadResponse> uploadFiles(MultiCVUploadRequest meta,
                                               List<MultipartFile> files) {
-        List<CVUploadResponse> responses = new ArrayList<>();
-        String ts = DateTimeFormatter
-                .ofPattern("yyyyMMdd'T'HHmmss'Z'")
-                .format(LocalDateTime.now());
+
+        List<CVUploadResponse> response = new ArrayList<>();
+        String ts = String.valueOf(System.currentTimeMillis());
 
         for (MultipartFile file : files) {
-            String name = file.getOriginalFilename();
-            CVUploadResponse resp;
-            try {
-                String hash = FileHashUtil.calculateMD5(file);
-                boolean isDuplicate = duplicateChecker.findDuplicate(hash)
-                        .map(existing -> {
-                            existing.setUpdatedAt(LocalDateTime.now());
-                            uploadRepo.save(existing);
-                            return true;
-                        }).orElse(false);
+            response.add(handleSingleFile(meta, file, ts));
+        }
+        return response;
+    }
 
-                CandidateCvUpload upload;
-                if (isDuplicate) {
-                    upload = duplicateChecker.findDuplicate(hash).get();
-                } else {
-                    String path = storageService.storeFile(
-                            file, meta.getJdRefId(), meta.getEmail(), ts
-                    );
-                    upload = CandidateCvUpload.builder()
-                            .userEmail(meta.getEmail())
-                            .jdRefId(meta.getJdRefId())
-                            .cvName(name)
-                            .filePath(path)
-                            .fileHash(hash)
-                            .createdAt(LocalDateTime.now())
-                            .createdBy(meta.getEmail())
-                            .parseStatus(ParseStatus.CV_UPLOADED)
-                            .build();
+    private CVUploadResponse handleSingleFile(MultiCVUploadRequest meta,
+                                              MultipartFile file,
+                                              String ts) {
 
-                     upload = uploadRepo.save(upload);
-                }
+        String fileName = file.getOriginalFilename();
 
+        try {
+            /* 1) hash duplicate check */
+            String hash = FileHashUtil.calculateMD5(file);
+            CvUpload upload   = dupChecker.findDuplicate(hash).orElse(null);
+            boolean  isFileDup = upload != null;
 
-                JdCvMapping jdCvMapping=   JdCvMapping.builder()
-                        .jdRefId(meta.getJdRefId())
-                        .cvUploadRefId(upload.getId())
+            /* 2) stop early if JD–CV link already exists */
+            if (isFileDup && mappingRepo.existsByJdRefIdAndCvUploadRefId(meta.getJdRefId(), upload.getId())) {
+
+                return new CVUploadResponse(
+                        upload.getId(),
+                        fileName,
+                        "",
+                        ParseStatus.CV_UPLOADED,
+                        "Duplicate CV already attached to this JD");
+            }
+
+            /* 3) persist upload row if this is a brand-new file */
+            if (!isFileDup) {
+                String path = storage.storeFile(file, meta.getJdRefId(), meta.getEmail(), ts);
+                upload = uploadRepo.save(CvUpload.builder()
+                        .cvName(fileName)
+                        .filePath(path)
+                        .fileHash(hash)
+                        .userEmail(meta.getEmail())
+                        .parseStatus(ParseStatus.CV_UPLOADED)
                         .createdAt(LocalDateTime.now())
                         .createdBy(meta.getEmail())
-                        .build();
-
-                // record mapping
-                mappingRepo.save(jdCvMapping);
-
-                // kick off async pipeline
-                parsingService.parseAndCreateAsync(upload, meta, isDuplicate);
-
-                resp = new CVUploadResponse(
-                        upload.getId(),
-                        name,
-                        upload.getFilePath(),
-                        isDuplicate ? ParseStatus.CV_PARSED_SUCCESS : ParseStatus.CV_UPLOADED,
-                        isDuplicate ? "Duplicate: scheduled candidate-creation async" : "Uploaded and queued"
-                );
-            } catch (IOException ex) {
-                resp = new CVUploadResponse(
-                        null, name, null,
-                        ParseStatus.CV_PARSED_FAILURE,
-                        "Upload error: " + ex.getMessage());
+                        .build());
             }
-            responses.add(resp);
+
+            /* 4) create link row (guaranteed unique) */
+            JdCvMapping link = mappingRepo.save(JdCvMapping.builder()
+                    .jdRefId(meta.getJdRefId())
+                    .cvUploadRefId(upload.getId())
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(meta.getEmail())
+                    .build());
+
+            /* 5) fire async parse/creation pipeline */
+            parsing.parseAndCreateAsync(upload, meta, isFileDup);
+
+            return new CVUploadResponse(
+                    upload.getId(),
+                    fileName,
+                    upload.getFilePath(),
+                    isFileDup ? ParseStatus.CV_PARSED_SUCCESS : ParseStatus.CV_UPLOADED,
+                    isFileDup ? "Duplicate file: candidate pipeline started for this JD"
+                            : "Uploaded and queued");
+
+        } catch (IOException io) {
+            return new CVUploadResponse(
+                    null,
+                    fileName,
+                    null,
+                    ParseStatus.CV_PARSED_FAILURE,
+                    "Upload error: " + io.getMessage());
         }
-        return responses;
     }
 
 
+    public Page<CvUpload> listUploadsForJd(String jdId, Pageable pageable) {
+        return uploadRepo.findAllByJd(jdId, pageable);
+    }
 
-    public Optional<CandidateCvUpload> getById(String id) {
+    public Optional<CvUpload> getById(String id) {
         return uploadRepo.findById(id);
     }
 
-
-    public Page<CandidateCvUpload> searchBy(
-            Map<String,String> filters,
-            Pageable pageable) {
-
-        Query query = new Query();
-
-        // Build an ilike (regex, case-insensitive, ".*value.*") for each param:
-        filters.forEach((field, value) -> {
-            String escaped = Pattern.quote(value.trim());
-            String regex = String.format(".*%s.*", escaped);
-            query.addCriteria(Criteria.where(field)
-                    .regex(regex, "i"));
-        });
-
-        long total = mongoTemplate.count(query, CandidateCvUpload.class);
-        query.with(pageable);
-        List<CandidateCvUpload> list = mongoTemplate.find(query, CandidateCvUpload.class);
-
-        return new PageImpl<>(list, pageable, total);
+    public Page<CvUpload> getAllUploads(Pageable pg) {
+        return uploadRepo.findAll(pg);
     }
 
-
-    public Page<CandidateCvUpload> getAllUploads(Pageable pageable) {
-        return uploadRepo.findAll(pageable);
+    public Page<CvUpload> searchBy(Map<String, String> filters, Pageable pg) {
+        Query q = new Query();
+        filters.forEach((k, v) ->
+                q.addCriteria(Criteria.where(k).regex(".*" + v.trim() + ".*", "i")));
+        long total = mongo.count(q, CvUpload.class);
+        List<CvUpload> hits = mongo.find(q.with(pg), CvUpload.class);
+        return new PageImpl<>(hits, pg, total);
     }
 }

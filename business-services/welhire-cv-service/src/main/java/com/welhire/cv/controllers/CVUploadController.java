@@ -2,7 +2,7 @@ package com.welhire.cv.controllers;
 
 
 import com.welhire.cv.services.CVUploadService;
-import com.welhire.persistence.entity.sql.CandidateCvUpload;
+import com.welhire.persistence.entity.sql.CvUpload;
 import com.welhire.shared.dto.v1.CVUploadResponse;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
 import com.welhire.shared.dto.wrapper.ApiResponse;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/cv-uploads")
+@RequestMapping("/api/cv-upload")
 @RequiredArgsConstructor
 public class CVUploadController {
 
@@ -74,9 +74,28 @@ public class CVUploadController {
                 .body(ApiResponse.success("Files processed", uploadResults));
     }
 
+    @GetMapping("/{jdRefId}/jd")
+    public ResponseEntity<ApiResponse<Page<CvUpload>>> listUploadsByJd(
+            @PathVariable("jdRefId") String jdRefId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
+
+        /* parse "sort" = field,dir  (e.g. "createdAt,desc") */
+        String[] parts = sort.split(",");
+        String sortField = parts[0];
+        Sort.Direction dir = Sort.Direction.fromString(parts.length > 1 ? parts[1] : "desc");
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortField));
+        Page<CvUpload> pageResult = uploadService.listUploadsForJd(jdRefId, pageable);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Uploads for JD fetched", pageResult)
+        );
+    }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<CandidateCvUpload>>> listAllUploads(
+    public ResponseEntity<ApiResponse<Page<CvUpload>>> listAllUploads(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
@@ -89,7 +108,7 @@ public class CVUploadController {
                 : "desc");
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
-        Page<CandidateCvUpload> uploadsPage = uploadService.getAllUploads(pageable);
+        Page<CvUpload> uploadsPage = uploadService.getAllUploads(pageable);
 
         return ResponseEntity.ok(
                 ApiResponse.success("Paginated uploads fetched", uploadsPage)
@@ -97,7 +116,7 @@ public class CVUploadController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CandidateCvUpload>> getById(
+    public ResponseEntity<ApiResponse<CvUpload>> getById(
             @PathVariable("id") String id) {
 
         return uploadService.getById(id)
@@ -109,7 +128,7 @@ public class CVUploadController {
 
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<CandidateCvUpload>>> search(
+    public ResponseEntity<ApiResponse<Page<CvUpload>>> search(
             @RequestParam Map<String,String> allParams,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -127,7 +146,7 @@ public class CVUploadController {
 
         Pageable pageable = PageRequest.of(page, size, s);
 
-        Page<CandidateCvUpload> results =
+        Page<CvUpload> results =
                 uploadService.searchBy(allParams, pageable);
 
         return ResponseEntity.ok(
