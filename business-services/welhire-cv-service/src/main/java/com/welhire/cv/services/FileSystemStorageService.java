@@ -1,6 +1,8 @@
 package com.welhire.cv.services;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,5 +44,8 @@ public class FileSystemStorageService {
         return relativePath;
        // return targetPath.toAbsolutePath().toString();
     }
-
+    public Resource loadAsResource(String relativePath) {
+        Path full = Paths.get(basePath).resolve(relativePath);
+        return new FileSystemResource(full.toFile());
+    }
 }

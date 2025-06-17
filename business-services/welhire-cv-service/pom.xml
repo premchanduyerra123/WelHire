@@ -18,6 +18,7 @@
 		<java.version>21</java.version>
 <!-- 		<spring.boot.version>3.2.5</spring.boot.version>-->
 		<spring.cloud.version>2023.0.1</spring.cloud.version>
+		<io.github.openfeign.form.version>3.8.0</io.github.openfeign.form.version>
 		<lombok.version>1.18.38</lombok.version>
 		<modelmapper.version>2.4.4</modelmapper.version>
 		<postgresql.version>42.7.2</postgresql.version>
@@ -54,6 +55,12 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.github.openfeign.form</groupId>
+			<artifactId>feign-form-spring</artifactId>
+			<version>${io.github.openfeign.form.version}</version>
 		</dependency>
 
 		<dependency>

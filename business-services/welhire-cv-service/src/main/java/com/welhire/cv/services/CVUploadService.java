@@ -40,7 +40,7 @@ public class CVUploadService {
     private final CVParsingService parsingService;
     private final MongoTemplate mongoTemplate;
     private final JdCvMappingRepository mappingRepo;
-    private final DuplicateChecker duplicateChecker;
+    private final HashDuplicateChecker duplicateChecker;
 
     public List<CVUploadResponse> uploadFiles(MultiCVUploadRequest meta,
                                               List<MultipartFile> files) {
@@ -56,7 +56,6 @@ public class CVUploadService {
                 String hash = FileHashUtil.calculateMD5(file);
                 boolean isDuplicate = duplicateChecker.findDuplicate(hash)
                         .map(existing -> {
-                            // map to existing entity
                             existing.setUpdatedAt(LocalDateTime.now());
                             uploadRepo.save(existing);
                             return true;

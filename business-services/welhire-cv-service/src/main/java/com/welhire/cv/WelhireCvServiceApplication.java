@@ -20,7 +20,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 		"com.welhire.shared.dto",                     // shared DTOs
 		"com.welhire.persistence.entity"              // entities
 })
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.welhire.*")
 @EnableAsync
 public class WelhireCvServiceApplication {
 	public static void main(String[] args) {

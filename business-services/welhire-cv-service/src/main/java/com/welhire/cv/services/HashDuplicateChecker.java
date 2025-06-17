@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class DuplicateChecker {
+public class HashDuplicateChecker {
     private final CandidateCVUploadRepository repo;
 
     public Optional<CandidateCvUpload> findDuplicate(String fileHash) {

@@ -1,10 +1,10 @@
 package com.welhire.cv.mocks;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-
 import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
-import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,32 +15,23 @@ import java.util.List;
 @RequestMapping("/parse")
 public class MockParsingController {
 
-    @Data
-    public static class ParseRequest {
-        public String jdContentId;
-        public String fileName;
-    }
-
-    @PostMapping
-    public ParsedCandidateCV parseCV(@RequestBody ParseRequest req) {
-        log.info("Received parse request → jdId={} fileName={}", req.jdContentId, req.fileName);
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ParsedCandidateCV parseCV(@RequestPart("file") MultipartFile file) throws InterruptedException {
+        String fileName = file.getOriginalFilename();
+        log.info("Received parse multipart → file={}", fileName);
 
         // simulate delay
-        try {
-            Thread.sleep(10_000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Sleep interrupted", e);
-        }
-
-        log.info("Delay complete; returning mock ParsedCandidateCV");
+        Thread.sleep(10_000);
+        log.info("Delay complete; returning mock ParsedCandidateCV for file={}", fileName);
 
         return ParsedCandidateCV.builder()
-                // super/Audit fields:
 
 
-                // core parsed data:
-                .cvUploadRefId(req.fileName)
+                // CORE PARSED DATA
+                .cvUploadRefId(fileName)
                 .name("MITI BHARDWAJ")
                 .mobileNo("9033887718")
                 .emailId("miti07.bhardwaj@gmail.com")
@@ -82,7 +73,7 @@ public class MockParsingController {
                                 + "Management based in Ahmedabad, Gujarat, India. She has a proven track record…"
                 )
 
-                // metadata fields
+                // METADATA
                 .dataEntryDate("24/05/2024")
                 .userHashkey("-7471411372093908624")
                 .emailReminderCnt(0)
@@ -90,9 +81,8 @@ public class MockParsingController {
                 .dataUpdatedDate(List.of(Instant.parse("2024-09-30T14:49:52.991Z")))
                 .tokenCountUpdated(List.of(940))
 
-                // timestamp when this mock was parsed
+                // PARSE TIMESTAMP
                 .parsedAt(Instant.now())
                 .build();
     }
 }
-

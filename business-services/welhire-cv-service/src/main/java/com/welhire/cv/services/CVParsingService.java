@@ -1,6 +1,6 @@
 package com.welhire.cv.services;
 
-import com.welhire.cv.client.CandidateClient;
+import com.welhire.cv.config.ResourceMultipartFile;
 import com.welhire.persistence.entity.mongo.ParsedCandidateCV;
 import com.welhire.persistence.entity.sql.CandidateCvUpload;
 import com.welhire.persistence.repository.mongo.ParsedCandidateCvRepository;
@@ -10,18 +10,24 @@ import com.welhire.cv.client.ParsingClient;
 import com.welhire.shared.dto.enums.ParseStatus;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
 import com.welhire.shared.dto.v1.MultiCVUploadRequest;
-import com.welhire.shared.dto.v1.ParseRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +42,7 @@ public class CVParsingService {
     private final CandidateCVUploadRepository uploadRepo;
     private final ParsingClient parsingClient;
     private final MongoTemplate mongoTemplate;
-    private final CandidateClient candidateClient;   // ← inject
+    private final FileSystemStorageService storageService;
     private final CandidateCreationService creationService;
 
 
@@ -47,16 +53,45 @@ public class CVParsingService {
         log.info("[{}] parseAndCreateAsync start; isParsed={}", upload.getId(), isParsed);
 
         // 1) PARSING PHASE (only if not already parsed)
+
         if (!isParsed) {
+            // 1) load the saved file as a Resource
+
+             Resource fileResource = storageService.loadAsResource(upload.getFilePath());
+
+            if (!fileResource.exists() || !fileResource.isReadable()) {
+                log.error("[{}] file not found or not readable: {}", upload.getId(), upload.getFilePath());
+                upload.setParseStatus(ParseStatus.CV_PARSED_FAILURE);
+                upload.setParseErrorMessage("File not found or unreadable");
+                upload.setUpdatedAt(LocalDateTime.now());
+                uploadRepo.save(upload);
+                return;
+            }
+
+            // 2) mark processing
             upload.setParseStatus(ParseStatus.CV_PROCESSING);
             upload.setUpdatedAt(LocalDateTime.now());
             uploadRepo.save(upload);
 
-            ParsedCandidateCV pcv;
+
             try {
-                  pcv = parsingClient.parseCV(
-                        new ParseRequest(upload.getId(), upload.getFilePath())
-                );
+                // --- NEW: wrap the Resource into a MultipartFile ---
+                File diskFile = fileResource.getFile();
+                String contentType = Files.probeContentType(diskFile.toPath());
+                if (contentType == null) {
+                    contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                }
+                MultipartFile multipart = null;
+                try (InputStream is = new FileInputStream(diskFile)) {
+                      multipart = new ResourceMultipartFile(
+                            "file",
+                            fileResource,
+                            contentType
+                    );
+                }
+
+                ParsedCandidateCV pcv = parsingClient.parseCV(multipart);
+                // ----------------------------------------------------
 
                 pcv.setCvUploadRefId(upload.getId());
                 pcv.setCreatedBy(meta.getEmail());
@@ -65,6 +100,7 @@ public class CVParsingService {
 
                 upload.setParseStatus(ParseStatus.CV_PARSED_SUCCESS);
                 upload.setParseEndTime(LocalDateTime.now());
+
             } catch (Exception ex) {
                 log.error("[{}] parsing failed", upload.getId(), ex);
                 upload.setParseStatus(ParseStatus.CV_PARSED_FAILURE);
