@@ -5,7 +5,6 @@ import com.welhire.shared.dto.enums.CandidateStatus;
 import com.welhire.shared.dto.enums.ParseStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;

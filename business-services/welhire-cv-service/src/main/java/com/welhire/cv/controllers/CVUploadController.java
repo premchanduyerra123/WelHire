@@ -21,20 +21,18 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
+
 
 @RestController
-@RequestMapping("/api/cv-upload")
+@RequestMapping("/api/v1/cv-uploads")
 @RequiredArgsConstructor
 public class CVUploadController {
 
     private final CVUploadService uploadService;
 
 
-    @PostMapping(
-            value = "/multi",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
+    @PostMapping( consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
     public ResponseEntity<ApiResponse<List<CVUploadResponse>>> uploadMultiple(
             @RequestPart("meta") @Valid MultiCVUploadRequest meta,
             @RequestPart("files") MultipartFile[] files){
@@ -74,26 +72,6 @@ public class CVUploadController {
                 .body(ApiResponse.success("Files processed", uploadResults));
     }
 
-    @GetMapping("/{jdRefId}/jd")
-    public ResponseEntity<ApiResponse<Page<CvUpload>>> listUploadsByJd(
-            @PathVariable("jdRefId") String jdRefId,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
-
-        /* parse "sort" = field,dir  (e.g. "createdAt,desc") */
-        String[] parts = sort.split(",");
-        String sortField = parts[0];
-        Sort.Direction dir = Sort.Direction.fromString(parts.length > 1 ? parts[1] : "desc");
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortField));
-        Page<CvUpload> pageResult = uploadService.listUploadsForJd(jdRefId, pageable);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Uploads for JD fetched", pageResult)
-        );
-    }
-
     @GetMapping
     public ResponseEntity<ApiResponse<Page<CvUpload>>> listAllUploads(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -115,43 +93,15 @@ public class CVUploadController {
         );
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{uploadId}")
     public ResponseEntity<ApiResponse<CvUpload>> getById(
-            @PathVariable("id") String id) {
+            @PathVariable("uploadId") UUID uploadId) {
 
-        return uploadService.getById(id)
+        return uploadService.getById(uploadId)
                 .map(cv -> ResponseEntity.ok(ApiResponse.success("Found", cv)))
                 .orElseGet(() -> ResponseEntity
                         .status(404)
-                        .body(ApiResponse.failure("Not found id=" + id)));
-    }
-
-
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<CvUpload>>> search(
-            @RequestParam Map<String,String> allParams,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
-
-        // pull out pagination params so they don't become filters
-        allParams.remove("page");
-        allParams.remove("size");
-        allParams.remove("sort");
-
-        // parse sort param
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts[1]);
-        Sort   s   = Sort.by(dir, sortParts[0]);
-
-        Pageable pageable = PageRequest.of(page, size, s);
-
-        Page<CvUpload> results =
-                uploadService.searchBy(allParams, pageable);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Search results", results)
-        );
+                        .body(ApiResponse.failure("Not found id=" + uploadId)));
     }
 
 }

@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface CvParsedRepository  extends MongoRepository<CvParsed, UUID> {
-
+public interface CvParsedRepository  extends MongoRepository<CvParsed, String> {
     Optional<CvParsed> findByCvUploadRefId(UUID id);
 }

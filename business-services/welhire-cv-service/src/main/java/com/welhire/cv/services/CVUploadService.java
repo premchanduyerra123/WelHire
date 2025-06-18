@@ -33,10 +33,6 @@ public class CVUploadService {
     private final MongoTemplate mongo;
     private final HashDuplicateChecker dupChecker;
 
-    /* ------------------------------------------------- */
-    /*  PUBLIC API                                       */
-    /* ------------------------------------------------- */
-
     public List<CVUploadResponse> uploadFiles(MultiCVUploadRequest meta,
                                               List<MultipartFile> files) {
 
@@ -120,7 +116,7 @@ public class CVUploadService {
         return uploadRepo.findAllByJd(jdId, pageable);
     }
 
-    public Optional<CvUpload> getById(String id) {
+    public Optional<CvUpload> getById(UUID id) {
         return uploadRepo.findById(id);
     }
 

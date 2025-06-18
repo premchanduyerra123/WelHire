@@ -2,9 +2,7 @@ package com.welhire.shared.dto.v1;
 
 
 import com.welhire.shared.dto.enums.ParseStatus;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;

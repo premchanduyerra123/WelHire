@@ -4,7 +4,6 @@ import com.welhire.cv.client.CandidateClient;
 import com.welhire.exceptions.CandidateCreationException;
 import com.welhire.persistence.entity.mongo.CvParsed;
 import com.welhire.shared.dto.v1.CandidateCreationResponse;
-import com.welhire.shared.dto.v1.CreateCandidateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

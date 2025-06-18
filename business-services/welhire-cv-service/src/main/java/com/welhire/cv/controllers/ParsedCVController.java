@@ -13,17 +13,17 @@ import java.util.Map;
  import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/cv-parsed")
+@RequestMapping("/api/v1/parsed-cvs")
 @RequiredArgsConstructor
 public class ParsedCVController {
 
 
     private final CVParsingService cVParsingService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/{parsedId}")
     public ResponseEntity<ApiResponse<CvParsed>> getById(
-            @PathVariable("id") UUID id) {
-        CvParsed pcv = cVParsingService.getById(id);
+            @PathVariable("parsedId") String parsedId) {
+        CvParsed pcv = cVParsingService.getById(parsedId);
         return ResponseEntity.ok(ApiResponse.success("Found", pcv));
     }
 

@@ -3,7 +3,6 @@ package com.welhire.cv.services;
 import com.welhire.cv.config.ResourceMultipartFile;
 import com.welhire.persistence.entity.mongo.CvParsed;
 import com.welhire.persistence.entity.sql.CvUpload;
-import com.welhire.persistence.entity.sql.JdCvMapping;
 import com.welhire.persistence.repository.mongo.CvParsedRepository;
 import com.welhire.persistence.repository.sql.CvUploadRepository;
 import com.welhire.cv.client.ParsingClient;
@@ -117,7 +116,7 @@ public class CVParsingService {
         uploadRepo.save(upload);
     }
 
-    public CvParsed getById(UUID id) {
+    public CvParsed getById(String id) {
         return parsedRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Parsed CV not found: " + id));
     }

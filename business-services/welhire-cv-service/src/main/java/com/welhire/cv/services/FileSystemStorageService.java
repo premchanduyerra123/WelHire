@@ -19,10 +19,6 @@ public class FileSystemStorageService {
     @Value("${cv.upload.base-path}")
     private String basePath;
 
-    /**
-     * Saves the uploaded file under: <basePath>/<jdId>/<email>/<timestamp>/origFilename
-     * Returns the absolute file path.
-     */
     public String storeFile(MultipartFile file, String jdId, String email,String timestamp) throws IOException {
 
         String hostname =  InetAddress.getLocalHost().getHostName();
@@ -42,8 +38,7 @@ public class FileSystemStorageService {
         // 4. Build and return RELATIVE path using forward‐slashes:
         String relativePath = String.join("/",hostname, tenantId,jdId,email,timestamp,filename);
         return relativePath;
-       // return targetPath.toAbsolutePath().toString();
-    }
+     }
     public Resource loadAsResource(String relativePath) {
         Path full = Paths.get(basePath).resolve(relativePath);
         return new FileSystemResource(full.toFile());
