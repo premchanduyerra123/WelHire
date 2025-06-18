@@ -1,6 +1,6 @@
 package com.welhire.persistence.entity.mongo;
 
-import com.welhire.shared.dto.audits.BaseAudit;
+import com.welhire.shared.dto.audits.MongoBaseEntity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,9 +15,9 @@ import java.util.UUID;
 @Document(collection = "cv_parsed")
 @Data
 @SuperBuilder
-@AllArgsConstructor
 @NoArgsConstructor
-public class CvParsed extends BaseAudit {
+@AllArgsConstructor
+public class CvParsed extends MongoBaseEntity {
     @Id
     private String id;
     private UUID cvUploadRefId;
@@ -47,9 +47,7 @@ public class CvParsed extends BaseAudit {
     private List<Instant> dataUpdatedDate;
     private List<Integer> tokenCountUpdated;
     private Instant parsedAt = Instant.now();
-
-
-
+    private String picklePath;
 
 }
 

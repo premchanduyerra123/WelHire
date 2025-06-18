@@ -1,6 +1,7 @@
 package com.welhire.cv.services;
 
 import com.welhire.cv.config.ResourceMultipartFile;
+import com.welhire.exceptions.ParsedCvNotFoundException;
 import com.welhire.persistence.entity.mongo.CvParsed;
 import com.welhire.persistence.entity.sql.CvUpload;
 import com.welhire.persistence.repository.mongo.CvParsedRepository;
@@ -24,9 +25,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -57,7 +60,7 @@ public class CVParsingService {
             }
 
             upload.setParseStatus(ParseStatus.CV_PROCESSING);
-            upload.setParseStartTime(LocalDateTime.now());
+            upload.setParseStartTime(Instant.now());
             uploadRepo.save(upload);
 
             try {
@@ -65,25 +68,23 @@ public class CVParsingService {
                 CvParsed pcv = parsingClient.parseCV(mf);
                 pcv.setCvUploadRefId(upload.getId());
                 pcv.setCreatedBy(meta.getEmail());
-                pcv.setCreatedAt(LocalDateTime.now());
                 parsedRepo.save(pcv);
 
                 upload.setParseStatus(ParseStatus.CV_PARSED_SUCCESS);
-                upload.setParseEndTime(LocalDateTime.now());
+                upload.setParseEndTime(Instant.now());
             } catch (Exception e) {
                 log.error("[{}] parsing error", upload.getId(), e);
                 fail(upload, ParseStatus.CV_PARSED_FAILURE, e.getMessage());
                 return;
             }
 
-            upload.setUpdatedAt(LocalDateTime.now());
             upload.setUpdatedBy(meta.getEmail());
             uploadRepo.save(upload);
         }
 
         // 2) CANDIDATE CREATION
         upload.setCandidateCreateStatus(CandidateStatus.CANDIDATE_CREATION_PROCESSING);
-        upload.setCandidateCreateStartTime(LocalDateTime.now());
+        upload.setCandidateCreateStartTime(Instant.now());
         uploadRepo.save(upload);
 
         try {
@@ -94,14 +95,13 @@ public class CVParsingService {
             CandidateCreationResponse resp = creationService.createCandidate(pcv);
             upload.setCandidateId(resp.getCandidateId());
             upload.setCandidateCreateStatus(CandidateStatus.CANDIDATE_CREATION_SUCCESS);
-            upload.setCandidateCreateEndTime(LocalDateTime.now());
+            upload.setCandidateCreateEndTime(Instant.now());
         } catch (Exception e) {
             log.error("[{}] creation error", upload.getId(), e);
             upload.setCandidateCreateStatus(CandidateStatus.CANDIDATE_CREATION_FAILURE);
             upload.setCandidateCreateErrorMessage(e.getMessage());
         }
 
-        upload.setUpdatedAt(LocalDateTime.now());
         upload.setUpdatedBy(meta.getEmail());
         uploadRepo.save(upload);
 
@@ -112,13 +112,12 @@ public class CVParsingService {
     private void fail(CvUpload upload, ParseStatus status, String msg) {
         upload.setParseStatus(status);
         upload.setParseErrorMessage(msg);
-        upload.setUpdatedAt(LocalDateTime.now());
         uploadRepo.save(upload);
     }
 
-    public CvParsed getById(String id) {
-        return parsedRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Parsed CV not found: " + id));
+    public Optional<CvParsed> getById(String id) {
+        return parsedRepo.findById(id);
+
     }
 
     public Page<CvParsed> searchBy(Map<String, String> filters,

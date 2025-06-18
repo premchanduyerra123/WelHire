@@ -82,6 +82,7 @@ public class MockParsingController {
 
                 // PARSE TIMESTAMP
                 .parsedAt(Instant.now())
+                .picklePath("uploads/7471411372093908624/resume.txt")
                 .build();
     }
 }

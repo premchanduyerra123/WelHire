@@ -77,7 +77,6 @@ public class CVUploadService {
                         .fileHash(hash)
                         .userEmail(meta.getEmail())
                         .parseStatus(ParseStatus.CV_UPLOADED)
-                        .createdAt(LocalDateTime.now())
                         .createdBy(meta.getEmail())
                         .build());
             }
@@ -86,7 +85,6 @@ public class CVUploadService {
             JdCvMapping link = mappingRepo.save(JdCvMapping.builder()
                     .jdRefId(meta.getJdRefId())
                     .cvUploadRefId(upload.getId())
-                    .createdAt(LocalDateTime.now())
                     .createdBy(meta.getEmail())
                     .build());
 

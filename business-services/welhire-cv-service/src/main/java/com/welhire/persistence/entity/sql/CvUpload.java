@@ -1,6 +1,6 @@
 package com.welhire.persistence.entity.sql;
 
-import com.welhire.shared.dto.audits.BaseAudit;
+import com.welhire.shared.dto.audits.BaseEntity;
 import com.welhire.shared.dto.enums.CandidateStatus;
 import com.welhire.shared.dto.enums.ParseStatus;
 import jakarta.persistence.*;
@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ import java.util.UUID;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CvUpload extends BaseAudit {
+public class CvUpload extends BaseEntity {
     @Id
     @GeneratedValue(generator = "UUID")
     @org.hibernate.annotations.GenericGenerator(
@@ -34,14 +35,14 @@ public class CvUpload extends BaseAudit {
     @Enumerated(EnumType.STRING)
     private ParseStatus parseStatus;
     private String parseErrorMessage;
-    private LocalDateTime parseStartTime;
-    private LocalDateTime parseEndTime;
+    private Instant parseStartTime;
+    private Instant parseEndTime;
 
     @Enumerated(EnumType.STRING)
     private CandidateStatus candidateCreateStatus;
     private String candidateCreateErrorMessage;
-    private LocalDateTime candidateCreateStartTime;
-    private LocalDateTime candidateCreateEndTime;
+    private Instant candidateCreateStartTime;
+    private Instant candidateCreateEndTime;
 
 
 

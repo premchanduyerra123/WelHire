@@ -23,8 +23,12 @@ public class ParsedCVController {
     @GetMapping("/{parsedId}")
     public ResponseEntity<ApiResponse<CvParsed>> getById(
             @PathVariable("parsedId") String parsedId) {
-        CvParsed pcv = cVParsingService.getById(parsedId);
-        return ResponseEntity.ok(ApiResponse.success("Found", pcv));
+        return cVParsingService.getById(parsedId)
+                .map(cv -> ResponseEntity.ok(ApiResponse.success("Found", cv)))
+                .orElseGet(() -> ResponseEntity
+                        .status(404)
+                        .body(ApiResponse.failure("Not found id=" + parsedId)));
+
     }
 
 

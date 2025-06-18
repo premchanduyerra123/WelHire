@@ -1,5 +1,5 @@
 package com.welhire.persistence.entity.sql;
-import com.welhire.shared.dto.audits.BaseAudit;
+import com.welhire.shared.dto.audits.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -15,8 +15,9 @@ import java.util.UUID;
 @Table(name = "jd_cv_mapping")
 @Data
 @SuperBuilder
-@NoArgsConstructor @AllArgsConstructor
-public class JdCvMapping extends BaseAudit {
+@NoArgsConstructor
+@AllArgsConstructor
+public class JdCvMapping extends BaseEntity {
     @Id
     @GeneratedValue(generator = "UUID")
     @org.hibernate.annotations.GenericGenerator(
