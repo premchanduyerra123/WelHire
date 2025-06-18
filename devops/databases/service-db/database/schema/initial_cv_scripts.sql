@@ -1,3 +1,4 @@
+
  create table cv_upload 
 (
 id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -11,6 +12,10 @@ parse_start_time timestamp(6),
 parse_end_time   timestamp(6),
 parse_error_message  varchar(255),
 
+candidate_create_status     varchar(255),
+candidate_create_start_time timestamp(6),
+candidate_create_end_time   timestamp(6),
+candidate_create_error_message  varchar(255),
 
 candidate_id varchar(255),
 
